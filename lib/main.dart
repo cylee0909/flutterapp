@@ -11,6 +11,9 @@ class MyApp extends StatelessWidget {
     return new MaterialApp(
       title: 'Welcome to Flutter',
       home: new RandomWord(),
+      theme: new ThemeData(
+        primaryColor: Colors.white,
+      ),
     );
   }
 }
@@ -24,8 +27,10 @@ class RandomWord extends StatefulWidget {
 }
 
 class RandomWordsState extends State<RandomWord> {
+  final _saved = new Set<WordPair>();
   final _suggestions = <WordPair>[];
   final _biggerFont = const TextStyle(fontSize: 18.0);
+  final _smallFont = const TextStyle(fontSize: 12.0, color: Color(0x88FF0000));
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +39,41 @@ class RandomWordsState extends State<RandomWord> {
     return new Scaffold (
       appBar: new AppBar(
         title: new Text('Startup Name Generator'),
+        actions: <Widget>[
+          new IconButton(icon: new Icon(Icons.list), onPressed: _pushSaved),
+        ],
       ),
       body: _buildSuggestions(),
+    );
+  }
+  void _pushSaved() {
+    Navigator.of(context).push(
+      new MaterialPageRoute(
+        builder: (context) {
+          final tiles = _saved.map(
+                (pair) {
+              return new ListTile(
+                title: new Text(
+                  pair.asPascalCase,
+                  style: _biggerFont,
+                ),
+              );
+            },
+          );
+          final divided = ListTile
+              .divideTiles(
+            context: context,
+            tiles: tiles,
+          ).toList();
+
+          return new Scaffold(
+            appBar: new AppBar(
+              title: new Text('Saved Suggestions'),
+            ),
+            body: new ListView(children: divided),
+          );
+        },
+      ),
     );
   }
 
@@ -68,11 +106,30 @@ class RandomWordsState extends State<RandomWord> {
   }
 
   Widget _buildRow(WordPair suggestion) {
+    final alreadySaved = _saved.contains(suggestion);
     return new ListTile(
       title: new Text(
         suggestion.asPascalCase,
         style: _biggerFont,
       ),
+      trailing: new Icon(
+        alreadySaved ? Icons.favorite : Icons.favorite_border,
+        color: alreadySaved ? Colors.red : null,
+      ),
+      onTap: () {
+        setState(() {
+          if (alreadySaved) {
+            _saved.remove(suggestion);
+          } else {
+            _saved.add(suggestion);
+          }
+        });
+      },
+//      isThreeLine: true,
+//      subtitle: new Text(
+//        suggestion.asUpperCase,
+//        style: _smallFont,
+//      ),
     );
   }
 
